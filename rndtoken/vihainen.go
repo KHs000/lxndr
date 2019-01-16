@@ -1,0 +1,3 @@
+package rndtoken
+
+func GenerateToken () {}
