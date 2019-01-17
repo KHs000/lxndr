@@ -7,7 +7,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"main/identifier"
+	"github.com/KHs000/lxndr/identifier"
 )
 
 func SendToken(email string) (string, string) {

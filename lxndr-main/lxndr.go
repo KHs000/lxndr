@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	"main/identifier"
-	"main/rndtoken"
+	"github.com/KHs000/lxndr/identifier"
+	"github.com/KHs000/lxndr/rndtoken"
 )
 
 func main() {
