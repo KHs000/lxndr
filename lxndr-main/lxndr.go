@@ -7,5 +7,8 @@ import (
 )
 
 func main() {
-	fmt.Println(rndtoken.GenerateToken("felilpe.carbone@dito.com.br"))
+	hash := rndtoken.GenerateToken("felilpe.carbone@dito.com.br")
+
+	fmt.Println("Primeiro hash")
+	fmt.Println(hash)
 }
