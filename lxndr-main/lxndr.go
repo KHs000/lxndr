@@ -8,8 +8,8 @@ import (
 
 	"github.com/KHs000/lxndr/identifier"
 	"github.com/KHs000/lxndr/rndtoken"
+	"gopkg.in/mgo.v2/bson"
 
-	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/mongo"
 )
 
@@ -32,11 +32,23 @@ func main() {
 	filter := bson.M{"test": "testing around"}
 
 	collection := client.Database("lxndr").Collection("lxndr-quest")
-	res, err := collection.FindOne(ctx, filter).DecodeBytes()
+	res, err := collection.Find(ctx, filter)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	defer res.Close(ctx)
+
 	fmt.Println("Consulta de teste a base do Mongo:")
-	fmt.Println(res)
+
+	for res.Next(ctx) {
+		var result bson.M
+
+		err := res.Decode(&result)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Println(result["test"])
+	}
 }
