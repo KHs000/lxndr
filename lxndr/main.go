@@ -21,12 +21,12 @@ func main() {
 
 	identifier.IdentityCheck("felipe.carbone@dito.com.br", hash)
 
-	ctx, client := mongoDB.Connect()
-	res := mongoDB.Find(ctx, client)
+	conn := mongoDB.Connect()
+	res := mongoDB.Find(conn, bson.M{})
 
 	fmt.Println("Consulta de teste a base do Mongo:")
 
-	for res.Next(ctx) {
+	for res.Next(conn.Ctx) {
 		var result bson.M
 
 		err := res.Decode(&result)
