@@ -1,34 +1,27 @@
-package main
+package mongoDB
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
-
-	"github.com/KHs000/lxndr/identifier"
-	"github.com/KHs000/lxndr/rndtoken"
 
 	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/mongo"
 )
 
-func main() {
-	tkn, hash := rndtoken.SendToken("felipe.carbone@dito.com.br")
-
-	fmt.Println("Token")
-	fmt.Println(tkn)
-	fmt.Println("Hash")
-	fmt.Println(hash)
-
-	identifier.IdentityCheck("felipe.carbone@dito.com.br", hash)
-
+// Connect ..
+func Connect() (context.Context, *mongo.Client) {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	client, err := mongo.Connect(ctx, "mongodb://admin:admin123456@felipe-rabelo-shard-00-00-r4yae.gcp.mongodb.net:27017,felipe-rabelo-shard-00-01-r4yae.gcp.mongodb.net:27017,felipe-rabelo-shard-00-02-r4yae.gcp.mongodb.net:27017/test?ssl=true&replicaSet=felipe-rabelo-shard-0&authSource=admin&retryWrites=true")
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	return ctx, client
+}
+
+// Find ..
+func Find(ctx context.Context, client *mongo.Client) mongo.Cursor {
 	filter := bson.M{}
 
 	collection := client.Database("lxndr").Collection("lxndr-quest")
@@ -39,16 +32,5 @@ func main() {
 
 	defer res.Close(ctx)
 
-	fmt.Println("Consulta de teste a base do Mongo:")
-
-	for res.Next(ctx) {
-		var result bson.M
-
-		err := res.Decode(&result)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Println(result["test"])
-	}
+	return res
 }

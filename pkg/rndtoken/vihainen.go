@@ -7,15 +7,17 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/KHs000/lxndr/identifier"
+	"github.com/KHs000/lxndr/pkg/identifier"
 )
 
+// SendToken ..
 func SendToken(email string) (string, string) {
 	tkn, hash := generateToken(email)
 
 	return tkn, string(hash)
 }
 
+// ValidateToken ..
 func ValidateToken(email, hash string) bool {
 	return identifier.IdentityCheck(email, hash)
 }
