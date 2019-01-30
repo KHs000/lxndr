@@ -1,4 +1,4 @@
-package mongoDB
+package mongo
 
 import (
 	"context"
@@ -9,8 +9,8 @@ import (
 	"github.com/mongodb/mongo-go-driver/mongo"
 )
 
-// Conn ..
-type Conn struct {
+// Connection ..
+type Connection struct {
 	Ctx    context.Context
 	Client *mongo.Client
 }
@@ -21,19 +21,23 @@ type Collection struct {
 	CollName string
 }
 
+// Conn ..
+var Conn *Connection
+
 // Connect ..
-func Connect() *Conn {
+func Connect(connStr string) {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	client, err := mongo.Connect(ctx, "mongodb://admin:admin123456@felipe-rabelo-shard-00-00-r4yae.gcp.mongodb.net:27017,felipe-rabelo-shard-00-01-r4yae.gcp.mongodb.net:27017,felipe-rabelo-shard-00-02-r4yae.gcp.mongodb.net:27017/test?ssl=true&replicaSet=felipe-rabelo-shard-0&authSource=admin&retryWrites=true")
+
+	client, err := mongo.Connect(ctx, connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return &Conn{Ctx: ctx, Client: client}
+	Conn = &Connection{Ctx: ctx, Client: client}
 }
 
 // Find ..
-func Find(conn *Conn, coll Collection, filter bson.M) mongo.Cursor {
+func Find(conn *Connection, coll Collection, filter bson.M) mongo.Cursor {
 	collection := conn.Client.Database(coll.Database).Collection(coll.CollName)
 	res, err := collection.Find(conn.Ctx, filter)
 	if err != nil {
