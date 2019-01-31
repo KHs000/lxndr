@@ -7,18 +7,17 @@ import (
 
 	"github.com/KHs000/lxndr/pkg/identifier"
 	"github.com/KHs000/lxndr/pkg/mongo"
-
 	"github.com/KHs000/lxndr/pkg/rndtoken"
 )
 
-func test() {
-	log.Println("This is a test.")
-}
-
 func createUser(email string) {
-	tkn, hash := rndtoken.SendToken(email)
+	isNew := identifier.ValidateNewUser(email)
+	if !isNew {
+		log.Fatal("This email has already been registred")
+	}
 
-	newUser := identifier.User{Hash: hash, Token: tkn}
+	tkn, hash := rndtoken.SendToken(email)
+	newUser := identifier.User{Email: email, Hash: hash, Token: tkn}
 
 	coll := mongo.Collection{Database: "lxndr", CollName: "user"}
 	res := mongo.Insert(mongo.Conn, coll, newUser)
@@ -26,4 +25,14 @@ func createUser(email string) {
 	if id, ok := res.InsertedID.(primitive.ObjectID); ok {
 		log.Printf("User Created. ID: %v", primitive.ObjectID.String(id))
 	}
+}
+
+func editUser(email string, data interface{}) {
+	isNew := identifier.ValidateNewUser(email)
+	if isNew {
+		log.Fatal("This email is not registred")
+	}
+
+	coll := mongo.Collection{Database: "lxndr", CollName: "user"}
+	res := mongo.Update(mongo.Conn, coll, data)
 }

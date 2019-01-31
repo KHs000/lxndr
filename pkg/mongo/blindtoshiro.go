@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/mongo"
+	"gopkg.in/mgo.v2/bson"
 )
 
 // Connection ..
@@ -19,11 +19,6 @@ type Connection struct {
 type Collection struct {
 	Database string
 	CollName string
-}
-
-// Document ..
-type Document struct {
-	data interface{}
 }
 
 // Conn ..
@@ -62,7 +57,9 @@ func Insert(conn *Connection, coll Collection, data interface{}) *mongo.InsertOn
 	}
 
 	return res
-	// if insertID, ok := res.InsertedID.(primitive.ObjectID); ok {
-	// 	log.Println(string(insertID))
-	// }
+}
+
+// Update ..
+func Update(conn *Connection, coll Collection, data interface{}) {
+
 }

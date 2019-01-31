@@ -29,5 +29,5 @@ func main() {
 	json.Unmarshal(bytes, &config)
 	mongo.Connect(config.ConnStr)
 
-	createUser("felipe.carbone@dito.com.br")
+	createUser("daniel.silveira@dito.com.br")
 }
