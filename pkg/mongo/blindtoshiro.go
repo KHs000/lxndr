@@ -21,6 +21,11 @@ type Collection struct {
 	CollName string
 }
 
+// Document ..
+type Document struct {
+	data interface{}
+}
+
 // Conn ..
 var Conn *Connection
 
@@ -36,8 +41,8 @@ func Connect(connStr string) {
 	Conn = &Connection{Ctx: ctx, Client: client}
 }
 
-// Find ..
-func Find(conn *Connection, coll Collection, filter bson.M) mongo.Cursor {
+// Search ..
+func Search(conn *Connection, coll Collection, filter bson.M) mongo.Cursor {
 	collection := conn.Client.Database(coll.Database).Collection(coll.CollName)
 	res, err := collection.Find(conn.Ctx, filter)
 	if err != nil {
@@ -46,4 +51,18 @@ func Find(conn *Connection, coll Collection, filter bson.M) mongo.Cursor {
 
 	defer res.Close(conn.Ctx)
 	return res
+}
+
+// Insert ..
+func Insert(conn *Connection, coll Collection, data interface{}) *mongo.InsertOneResult {
+	collection := conn.Client.Database(coll.Database).Collection(coll.CollName)
+	res, err := collection.InsertOne(conn.Ctx, data)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return res
+	// if insertID, ok := res.InsertedID.(primitive.ObjectID); ok {
+	// 	log.Println(string(insertID))
+	// }
 }
