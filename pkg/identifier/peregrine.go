@@ -3,8 +3,8 @@ package identifier
 import (
 	"log"
 
+	"github.com/mongodb/mongo-go-driver/bson"
 	"golang.org/x/crypto/bcrypt"
-	"gopkg.in/mgo.v2/bson"
 
 	"github.com/KHs000/lxndr/pkg/mongo"
 )

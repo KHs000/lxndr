@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/bson/primitive"
 
 	"github.com/KHs000/lxndr/pkg/identifier"
@@ -34,5 +35,9 @@ func editUser(email string, data interface{}) {
 	}
 
 	coll := mongo.Collection{Database: "lxndr", CollName: "user"}
-	res := mongo.Update(mongo.Conn, coll, data)
+	res := mongo.Update(mongo.Conn, coll, bson.M{"email": email}, data)
+
+	if id, ok := res.UpsertedID.(primitive.ObjectID); ok {
+		log.Printf("User Updated. ID %v", id)
+	}
 }

@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/mongo"
-	"gopkg.in/mgo.v2/bson"
 )
 
 // Connection ..
@@ -60,6 +60,14 @@ func Insert(conn *Connection, coll Collection, data interface{}) *mongo.InsertOn
 }
 
 // Update ..
-func Update(conn *Connection, coll Collection, data interface{}) {
+func Update(conn *Connection, coll Collection, filter bson.M,
+	data interface{}) *mongo.UpdateResult {
 
+	collection := conn.Client.Database(coll.Database).Collection(coll.CollName)
+	res, err := collection.UpdateOne(conn.Ctx, filter, data)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return res
 }
