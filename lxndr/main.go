@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/KHs000/lxndr/pkg/mongo"
@@ -14,6 +15,14 @@ type configs struct {
 }
 
 func main() {
+	startDatabase()
+	exportRoutes()
+
+	log.Println("Listening on port 8080...")
+	http.ListenAndServe(":8080", nil)
+}
+
+func startDatabase() {
 	configF, err := os.Open("config.json")
 	if err != nil {
 		log.Fatal(err)
@@ -28,10 +37,4 @@ func main() {
 	var config configs
 	json.Unmarshal(bytes, &config)
 	mongo.Connect(config.ConnStr)
-
-	createUser("sergio.silva@dito.com.br")
-	type testUp struct {
-		Email string
-	}
-	editUser("email", testUp{Email: "sergio.silva@dito.com.br"})
 }
