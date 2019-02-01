@@ -33,5 +33,5 @@ func main() {
 	type testUp struct {
 		Email string
 	}
-	editUser("sergio.silva@dito.com.br", testUp{Email: "email"})
+	editUser("email", testUp{Email: "sergio.silva@dito.com.br"})
 }

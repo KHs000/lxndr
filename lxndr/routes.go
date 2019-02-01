@@ -35,9 +35,11 @@ func editUser(email string, data interface{}) {
 	}
 
 	coll := mongo.Collection{Database: "lxndr", CollName: "user"}
-	res := mongo.Update(mongo.Conn, coll, bson.M{"email": email}, data)
+	res := mongo.Update(mongo.Conn, coll, bson.M{"email": email}, bson.M{"$set": data})
 
-	if id, ok := res.UpsertedID.(primitive.ObjectID); ok {
-		log.Printf("User Updated. ID %v", id)
+	if res.MatchedCount != 1 {
+		log.Fatal("There was as error during the update.")
 	}
+
+	log.Printf("%v user updated.", res.ModifiedCount)
 }
