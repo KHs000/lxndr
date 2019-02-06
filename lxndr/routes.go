@@ -16,6 +16,7 @@ import (
 func exportRoutes() {
 	httphandler.Handler("/", []string{}, defaultRoute)
 	httphandler.Handler("/newUser", []string{"email"}, createUser)
+	httphandler.Handler("/editUser", []string{"email"}, editUser)
 }
 
 func defaultRoute(b map[string]string) httphandler.Res {
@@ -54,18 +55,31 @@ func createUser(b map[string]string) httphandler.Res {
 	return resp
 }
 
-func editUser(email string, data interface{}) {
+func editUser(b map[string]string) httphandler.Res {
+	email := b["email"]
+	resp := httphandler.Res{}
+
 	isNew := identifier.ValidateNewUser(email)
 	if isNew {
-		log.Fatal("This email is not registred.")
+		log.Println("This email is not registred.")
+		resp.E.Code = 404
+		resp.E.Error = "This email is not registred."
+		return resp
 	}
 
 	coll := mongo.Collection{Database: "lxndr", CollName: "user"}
-	res := mongo.Update(mongo.Conn, coll, bson.M{"email": email}, bson.M{"$set": data})
+	res := mongo.Update(
+		mongo.Conn, coll, bson.M{"email": email}, bson.M{"$set": b})
 
 	if res.MatchedCount != 1 {
-		log.Fatal("There was as error during the update.")
+		log.Println("This email matched no registry.")
+		resp.E.Code = 404
+		resp.E.Error = "This email matched no registry."
+		return resp
 	}
 
 	log.Printf("%v user updated.", res.ModifiedCount)
+	resp.S.Code = 200
+	resp.S.Message = fmt.Sprintf("%v user updated.", res.ModifiedCount)
+	return resp
 }

@@ -38,6 +38,7 @@ func validBody(rb []byte, ff []string) (*Body, *Error) {
 	err := json.Unmarshal(rb, &b)
 	if err != nil {
 		log.Println("Could not read body.")
+		log.Println(err)
 		return nil, &Error{Code: 400, Error: "Could not read body."}
 	}
 
@@ -74,6 +75,7 @@ func Handler(path string, matchFields []string, f func(map[string]string) Res) {
 
 		resp := f(b.Body)
 		if &resp.E != nil {
+			log.Println(resp.E.Code)
 			w.WriteHeader(resp.E.Code)
 			w.Write([]byte(resp.E.Error))
 			log.Println(resp.E.Error)
