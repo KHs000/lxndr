@@ -78,7 +78,6 @@ func editUser(b map[string]string) httphandler.Res {
 		return resp
 	}
 
-	log.Printf("%v user updated.", res.ModifiedCount)
 	resp.S.Code = 200
 	resp.S.Message = fmt.Sprintf("%v user updated.", res.ModifiedCount)
 	return resp
