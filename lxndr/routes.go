@@ -17,6 +17,7 @@ func exportRoutes() {
 	httphandler.Handler("/", []string{}, defaultRoute)
 	httphandler.Handler("/newUser", []string{"email"}, createUser)
 	httphandler.Handler("/editUser", []string{"email"}, editUser)
+	httphandler.Handler("/deleteUser", []string{"email"}, deleteUser)
 }
 
 func defaultRoute(b map[string]string) httphandler.Res {
@@ -79,6 +80,33 @@ func editUser(b map[string]string) httphandler.Res {
 	}
 
 	resp.S.Code = 200
-	resp.S.Message = fmt.Sprintf("%v user updated.", res.ModifiedCount)
+	resp.S.Message = fmt.Sprintf("%q user updated.", email)
+	return resp
+}
+
+func deleteUser(b map[string]string) httphandler.Res {
+	email := b["email"]
+	resp := httphandler.Res{}
+
+	isNew := identifier.ValidateNewUser(email)
+	if isNew {
+		log.Println("This email is not registred.")
+		resp.E.Code = 404
+		resp.E.Error = "This email is not registred."
+		return resp
+	}
+
+	coll := mongo.Collection{Database: "lxndr", CollName: "user"}
+	res := mongo.Delete(mongo.Conn, coll, bson.M{"email": email})
+
+	if res.DeletedCount != 1 {
+		log.Println("This email matched no registry.")
+		resp.E.Code = 404
+		resp.E.Error = "This email matched no registry."
+		return resp
+	}
+
+	resp.S.Code = 200
+	resp.S.Message = fmt.Sprintf("%q user deleted.", email)
 	return resp
 }

@@ -74,3 +74,14 @@ func Update(conn *Connection, coll Collection, filter bson.M,
 
 	return res
 }
+
+// Delete ..
+func Delete(conn *Connection, coll Collection, filter bson.M) *mongo.DeleteResult {
+	collection := conn.Client.Database(coll.Database).Collection(coll.CollName)
+	res, err := collection.DeleteOne(conn.Ctx, filter)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return res
+}
