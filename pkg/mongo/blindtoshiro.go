@@ -3,7 +3,6 @@ package mongo
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/mongo"
@@ -26,7 +25,7 @@ var Conn *Connection
 
 // Connect ..
 func Connect(connStr string) {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx := context.Background()
 
 	client, err := mongo.Connect(ctx, connStr)
 	if err != nil {
@@ -34,6 +33,10 @@ func Connect(connStr string) {
 	}
 
 	Conn = &Connection{Ctx: ctx, Client: client}
+
+	if ctx.Err() != nil {
+		log.Println(ctx.Err())
+	}
 }
 
 // Search ..
