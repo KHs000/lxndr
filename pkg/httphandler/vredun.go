@@ -74,11 +74,9 @@ func Handler(path string, matchFields []string, f func(map[string]string) Res) {
 		}
 
 		resp := f(b.Body)
-		if &resp.E != nil {
-			log.Println(resp.E.Code)
+		if resp.E.Code != 0 {
 			w.WriteHeader(resp.E.Code)
 			w.Write([]byte(resp.E.Error))
-			log.Println(resp.E.Error)
 			return
 		}
 
