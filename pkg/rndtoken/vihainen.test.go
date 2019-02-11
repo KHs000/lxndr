@@ -2,7 +2,7 @@ package rndtoken
 
 import "testing"
 
-// TestGenerateToken ...
+// TestGenerateToken ..
 func TestGenerateToken(t *testing.T) {
 
 }

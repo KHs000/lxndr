@@ -14,20 +14,22 @@ import (
 )
 
 func exportRoutes() {
-	httphandler.Handler("/", []string{}, defaultRoute)
-	httphandler.Handler("/newUser", []string{"email"}, createUser)
-	httphandler.Handler("/editUser", []string{"email"}, editUser)
-	httphandler.Handler("/deleteUser", []string{"email"}, deleteUser)
+	httphandler.Handler("/", []string{}, DefaultRoute)
+	httphandler.Handler("/newUser", []string{"email"}, CreateUser)
+	httphandler.Handler("/editUser", []string{"email"}, EditUser)
+	httphandler.Handler("/deleteUser", []string{"email"}, DeleteUser)
 }
 
-func defaultRoute(b map[string]string) httphandler.Res {
+// DefaultRoute ..
+func DefaultRoute(b map[string]string) httphandler.Res {
 	resp := httphandler.Res{}
 	resp.S.Code = 200
 	resp.S.Message = "It works..."
 	return resp
 }
 
-func createUser(b map[string]string) httphandler.Res {
+// CreateUser ..
+func CreateUser(b map[string]string) httphandler.Res {
 	email := b["email"]
 	resp := httphandler.Res{}
 
@@ -56,7 +58,8 @@ func createUser(b map[string]string) httphandler.Res {
 	return resp
 }
 
-func editUser(b map[string]string) httphandler.Res {
+// EditUser ..
+func EditUser(b map[string]string) httphandler.Res {
 	email := b["email"]
 	resp := httphandler.Res{}
 
@@ -84,7 +87,8 @@ func editUser(b map[string]string) httphandler.Res {
 	return resp
 }
 
-func deleteUser(b map[string]string) httphandler.Res {
+// DeleteUser ..
+func DeleteUser(b map[string]string) httphandler.Res {
 	email := b["email"]
 	resp := httphandler.Res{}
 
