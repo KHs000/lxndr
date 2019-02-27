@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/KHs000/lxndr/pkg/httphandler"
 	"github.com/KHs000/lxndr/pkg/mongo"
 )
 
@@ -16,7 +17,7 @@ type configs struct {
 
 func main() {
 	startDatabase()
-	exportRoutes()
+	httphandler.ExportRoutes()
 
 	log.Println("Listening on port 8080...")
 	http.ListenAndServe(":8080", nil)

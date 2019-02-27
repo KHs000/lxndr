@@ -13,21 +13,6 @@ import (
 	"github.com/KHs000/lxndr/pkg/rndtoken"
 )
 
-func exportRoutes() {
-	httphandler.Handler("/", []string{}, DefaultRoute)
-	httphandler.Handler("/newUser", []string{"email"}, CreateUser)
-	httphandler.Handler("/editUser", []string{"email"}, EditUser)
-	httphandler.Handler("/deleteUser", []string{"email"}, DeleteUser)
-}
-
-// DefaultRoute ..
-func DefaultRoute(b map[string]string) httphandler.Res {
-	resp := httphandler.Res{}
-	resp.S.Code = 200
-	resp.S.Message = "It works..."
-	return resp
-}
-
 // CreateUser ..
 func CreateUser(b map[string]string) httphandler.Res {
 	email := b["email"]
