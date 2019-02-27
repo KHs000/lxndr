@@ -13,8 +13,14 @@ import (
 	"github.com/KHs000/lxndr/pkg/rndtoken"
 )
 
+type response struct {
+	Message string   `json:"message"`
+	Data    []string `json:"data"`
+}
+
 func createUser(w http.ResponseWriter, r *http.Request) {
 	logAccess(r)
+	resp := response{}
 
 	type request struct {
 		email string
@@ -28,8 +34,9 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	email := b["email"].(string)
 	isNew := identifier.ValidateNewUser(email)
 	if !isNew {
-		writeResponse(w, http.StatusConflict,
-			"This email has already been registred.")
+		resp.Message = "This email has already been registred."
+		log.Println("Email conflict.")
+		writeResponse(w, http.StatusConflict, resp)
 		return
 	}
 
@@ -40,20 +47,23 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	res := mongo.Insert(mongo.Conn, coll, newUser)
 
 	if id, ok := res.InsertedID.(primitive.ObjectID); ok {
-		message := fmt.Sprintf(`User Created. ID: %v.`, primitive.ObjectID.String(id))
+		message := fmt.Sprintf(`%v`, primitive.ObjectID.String(id))
+		resp.Message = message
 		log.Println(message)
-		writeResponse(w, http.StatusCreated, message)
+		writeResponse(w, http.StatusCreated, resp)
 		return
 	}
 
 	message := "There might be an error, please retry your operation."
+	resp.Message = message
 	log.Println(message)
-	writeResponse(w, http.StatusInternalServerError, message)
+	writeResponse(w, http.StatusInternalServerError, resp)
 	return
 }
 
 func editUser(w http.ResponseWriter, r *http.Request) {
 	logAccess(r)
+	resp := response{}
 
 	type request struct {
 		email string
@@ -67,8 +77,9 @@ func editUser(w http.ResponseWriter, r *http.Request) {
 	email := b["email"].(string)
 	isNew := identifier.ValidateNewUser(email)
 	if isNew {
+		resp.Message = "This email is not registred."
 		log.Println("This email is not registred.")
-		writeResponse(w, http.StatusNotFound, "This email is not registred.")
+		writeResponse(w, http.StatusNotFound, resp)
 		return
 	}
 
@@ -77,18 +88,21 @@ func editUser(w http.ResponseWriter, r *http.Request) {
 		mongo.Conn, coll, bson.M{"email": email}, bson.M{"$set": b})
 
 	if res.MatchedCount != 1 {
+		resp.Message = "This email matched no registry."
 		log.Println("This email matched no registry.")
-		writeResponse(w, http.StatusNotFound, "This email matched no registry.")
+		writeResponse(w, http.StatusNotFound, resp)
 		return
 	}
 
 	message := fmt.Sprintf(`User '%v' updated.`, email)
+	resp.Message = message
 	log.Println(message)
-	writeResponse(w, http.StatusOK, message)
+	writeResponse(w, http.StatusOK, resp)
 }
 
 func deleteUser(w http.ResponseWriter, r *http.Request) {
 	logAccess(r)
+	resp := response{}
 
 	type request struct {
 		email string
@@ -102,8 +116,9 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	email := b["email"].(string)
 	isNew := identifier.ValidateNewUser(email)
 	if isNew {
+		resp.Message = "This email is not registred."
 		log.Println("This email is not registred.")
-		writeResponse(w, http.StatusNotFound, "This email is not registred.")
+		writeResponse(w, http.StatusNotFound, resp)
 		return
 	}
 
@@ -111,12 +126,40 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	res := mongo.Delete(mongo.Conn, coll, bson.M{"email": email})
 
 	if res.DeletedCount != 1 {
+		resp.Message = "This email matched no registry."
 		log.Println("This email matched no registry.")
-		writeResponse(w, http.StatusNotFound, "This email matched no registry.")
+		writeResponse(w, http.StatusNotFound, resp)
 		return
 	}
 
 	message := fmt.Sprintf(`User '%v' deleted.`, email)
+	resp.Message = message
 	log.Println(message)
-	writeResponse(w, http.StatusOK, message)
+	writeResponse(w, http.StatusOK, resp)
+}
+
+func listUsers(w http.ResponseWriter, r *http.Request) {
+	logAccess(r)
+	resp := response{}
+
+	coll := mongo.Collection{Database: "lxndr", CollName: "user"}
+	res := mongo.Search(mongo.Conn, coll, nil)
+
+	var list []string
+	for res.Next(mongo.Conn.Ctx) {
+		var row bson.M
+		err := res.Decode(&row)
+		if err != nil {
+			resp.Message = "Internal server error."
+			log.Println("Error decoding line from search.")
+			writeResponse(w, http.StatusInternalServerError, resp)
+		}
+
+		list = append(list, row["email"].(string))
+	}
+
+	resp.Message = ""
+	resp.Data = list
+	log.Printf("Found %v users", len(list))
+	writeResponse(w, http.StatusOK, resp)
 }

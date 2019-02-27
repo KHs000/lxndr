@@ -2,8 +2,6 @@ package httphandler
 
 import (
 	"encoding/json"
-	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -29,11 +27,17 @@ type Res struct {
 
 func logAccess(r *http.Request) { log.Printf("Request at %q", r.URL.Path) }
 
-func writeResponse(w http.ResponseWriter, code int, message string) {
+func writeResponse(w http.ResponseWriter, code int, data interface{}) {
 	w.WriteHeader(code)
 	w.Header().Set("Content-Type", "application/json")
 
-	io.WriteString(w, fmt.Sprintf(`{"message": "%v"}`, message))
+	res, err := json.Marshal(data)
+	if err != nil {
+		writeResponse(w, http.StatusInternalServerError, "Internal server error.")
+		return
+	}
+
+	w.Write(res)
 }
 
 func processRequestBody(r *http.Request, b interface{}) (map[string]interface{}, *Error) {
@@ -65,4 +69,5 @@ func ExportRoutes() {
 	http.HandleFunc("/createUser", createUser)
 	http.HandleFunc("/editUser", editUser)
 	http.HandleFunc("/deleteUser", deleteUser)
+	http.HandleFunc("/listUsers", listUsers)
 }

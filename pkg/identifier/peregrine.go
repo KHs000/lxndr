@@ -25,7 +25,8 @@ func ValidateNewUser(email string) bool {
 		var row bson.M
 		err := hits.Decode(&row)
 		if err != nil {
-			log.Fatal(err)
+			log.Println("Error decoding line from search.")
+			return false
 		}
 
 		if row["_id"] != nil {
