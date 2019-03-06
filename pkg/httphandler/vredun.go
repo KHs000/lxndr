@@ -21,17 +21,10 @@ type Response struct {
 
 func logAccess(r *http.Request) { log.Printf("Request at %q", r.URL.Path) }
 
-func writeResponse(w http.ResponseWriter, code int, data interface{}) {
-	w.WriteHeader(code)
-	w.Header().Set("Content-Type", "application/json")
-
-	res, err := json.Marshal(data)
-	if err != nil {
-		writeResponse(w, http.StatusInternalServerError, "Internal server error.")
-		return
+func recovery(message string) {
+	if r := recover(); r != nil {
+		log.Println(message)
 	}
-
-	w.Write(res)
 }
 
 func validateMethod(w http.ResponseWriter, r *http.Request, verb string) {
@@ -60,17 +53,24 @@ func processRequestBody(r *http.Request, b interface{}) (map[string]interface{},
 	return b.(map[string]interface{}), nil
 }
 
+func writeResponse(w http.ResponseWriter, code int, data interface{}) {
+	w.WriteHeader(code)
+	w.Header().Set("Content-Type", "application/json")
+
+	res, err := json.Marshal(data)
+	if err != nil {
+		writeResponse(w, http.StatusInternalServerError, "Internal server error.")
+		return
+	}
+
+	w.Write(res)
+}
+
 func defaultRoute(w http.ResponseWriter, r *http.Request) {
 	logAccess(r)
 	defer recovery("Method not allowed.")
 	validateMethod(w, r, "GET")
 	writeResponse(w, http.StatusOK, "It works...")
-}
-
-func recovery(message string) {
-	if r := recover(); r != nil {
-		log.Println(message)
-	}
 }
 
 // ExportRoutes ..
