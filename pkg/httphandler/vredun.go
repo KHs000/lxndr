@@ -13,16 +13,10 @@ type Error struct {
 	Error string
 }
 
-// Success ..
-type Success struct {
-	Code    int
-	Message string
-}
-
-// Res ..
-type Res struct {
-	E Error
-	S Success
+// Response ..
+type Response struct {
+	Message string   `json:"message"`
+	Data    []string `json:"data"`
 }
 
 func logAccess(r *http.Request) { log.Printf("Request at %q", r.URL.Path) }
@@ -38,6 +32,14 @@ func writeResponse(w http.ResponseWriter, code int, data interface{}) {
 	}
 
 	w.Write(res)
+}
+
+func validateMethod(w http.ResponseWriter, r *http.Request, verb string) {
+	if r.Method != verb {
+		resp := Response{Message: "Method not allowed."}
+		writeResponse(w, http.StatusBadRequest, resp)
+		panic("Method not allowed.")
+	}
 }
 
 func processRequestBody(r *http.Request, b interface{}) (map[string]interface{}, *Error) {
@@ -60,7 +62,15 @@ func processRequestBody(r *http.Request, b interface{}) (map[string]interface{},
 
 func defaultRoute(w http.ResponseWriter, r *http.Request) {
 	logAccess(r)
+	defer recovery("Method not allowed.")
+	validateMethod(w, r, "GET")
 	writeResponse(w, http.StatusOK, "It works...")
+}
+
+func recovery(message string) {
+	if r := recover(); r != nil {
+		log.Println(message)
+	}
 }
 
 // ExportRoutes ..

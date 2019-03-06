@@ -13,14 +13,11 @@ import (
 	"github.com/KHs000/lxndr/pkg/rndtoken"
 )
 
-type response struct {
-	Message string   `json:"message"`
-	Data    []string `json:"data"`
-}
-
 func createUser(w http.ResponseWriter, r *http.Request) {
 	logAccess(r)
-	resp := response{}
+	defer recovery("Method not allowed.")
+	validateMethod(w, r, "POST")
+	resp := Response{}
 
 	type request struct {
 		email string
@@ -63,7 +60,9 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 
 func editUser(w http.ResponseWriter, r *http.Request) {
 	logAccess(r)
-	resp := response{}
+	defer recovery("Method not allowed.")
+	validateMethod(w, r, "POST")
+	resp := Response{}
 
 	type request struct {
 		email string
@@ -78,7 +77,7 @@ func editUser(w http.ResponseWriter, r *http.Request) {
 	isNew := identifier.ValidateNewUser(email)
 	if isNew {
 		resp.Message = "This email is not registred."
-		log.Println("This email is not registred.")
+		log.Println("Email not registred.")
 		writeResponse(w, http.StatusNotFound, resp)
 		return
 	}
@@ -102,7 +101,9 @@ func editUser(w http.ResponseWriter, r *http.Request) {
 
 func deleteUser(w http.ResponseWriter, r *http.Request) {
 	logAccess(r)
-	resp := response{}
+	defer recovery("Method not allowed.")
+	validateMethod(w, r, "POST")
+	resp := Response{}
 
 	type request struct {
 		email string
@@ -117,7 +118,7 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	isNew := identifier.ValidateNewUser(email)
 	if isNew {
 		resp.Message = "This email is not registred."
-		log.Println("This email is not registred.")
+		log.Println("Email not registred.")
 		writeResponse(w, http.StatusNotFound, resp)
 		return
 	}
@@ -140,7 +141,9 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 
 func listUsers(w http.ResponseWriter, r *http.Request) {
 	logAccess(r)
-	resp := response{}
+	defer recovery("Method not allowed.")
+	validateMethod(w, r, "GET")
+	resp := Response{}
 
 	coll := mongo.Collection{Database: "lxndr", CollName: "user"}
 	res := mongo.Search(mongo.Conn, coll, nil)
