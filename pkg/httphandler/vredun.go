@@ -70,7 +70,8 @@ func defaultRoute(w http.ResponseWriter, r *http.Request) {
 	logAccess(r)
 	defer recovery("Method not allowed.")
 	validateMethod(w, r, "GET")
-	writeResponse(w, http.StatusOK, "It works...")
+	resp := Response{Message: "It works..."}
+	writeResponse(w, http.StatusOK, resp)
 }
 
 // ExportRoutes ..
