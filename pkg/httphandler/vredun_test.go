@@ -3,6 +3,7 @@ package httphandler
 import (
 	"encoding/json"
 	"io/ioutil"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -47,7 +48,7 @@ func TestDefaultRoute(t *testing.T) {
 		if err != nil {
 			t.Error("Could not parse request body")
 		}
-		if resp.StatusCode != 200 {
+		if resp.StatusCode != http.StatusOK {
 			t.Errorf("Expected StatusCode to be 200, got %v", resp.StatusCode)
 		}
 		if body.Message != "It works..." {
@@ -74,7 +75,7 @@ func TestDefaultRoute(t *testing.T) {
 		if err != nil {
 			t.Error("Could not parse request body")
 		}
-		if resp.StatusCode != 400 {
+		if resp.StatusCode != http.StatusBadRequest {
 			t.Errorf("Expected StatusCode to be 400, got %v", resp.StatusCode)
 		}
 		if body.Message != "Method not allowed." {
