@@ -10,13 +10,6 @@ import (
 	"github.com/KHs000/lxndr/pkg/mongodb"
 )
 
-// User ..
-type User struct {
-	Email string // email
-	Hash  string // hash email
-	Token string // password
-}
-
 // ValidateNewUser ..
 func ValidateNewUser(email string) bool {
 	coll := mongodb.Collection{Database: "lxndr", CollName: "user"}

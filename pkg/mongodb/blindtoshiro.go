@@ -4,35 +4,24 @@ import (
 	"context"
 	"log"
 
+	"github.com/KHs000/lxndr/domain"
 	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/mongo"
 )
 
-// Connection ..
-type Connection struct {
-	Ctx    context.Context
-	Client *mongo.Client
-}
-
-// Collection ..
-type Collection struct {
-	Database string
-	CollName string
-}
-
 // Conn ..
-var Conn *Connection
+var Conn *domain.Connection
 
 // NewConn ..
-func NewConn(connStr string) (Connection, error) {
+func NewConn(connStr string) (domain.Connection, error) {
 	ctx := context.Background()
 
 	client, err := mongo.Connect(ctx, connStr)
 	if err != nil {
-		return Connection{}, err
+		return domain.Connection{}, err
 	}
 
-	return Connection{
+	return domain.Connection{
 		Ctx:    ctx,
 		Client: client,
 	}, nil
@@ -47,7 +36,7 @@ func Connect(connStr string) {
 		log.Fatal(err)
 	}
 
-	Conn = &Connection{Ctx: ctx, Client: client}
+	Conn = &domain.Connection{Ctx: ctx, Client: client}
 
 	if ctx.Err() != nil {
 		log.Println(ctx.Err())
@@ -55,7 +44,8 @@ func Connect(connStr string) {
 }
 
 // Search ..
-func Search(conn *Connection, coll Collection, filter bson.M) mongo.Cursor {
+func Search(conn *domain.Connection, coll domain.Collection,
+	filter bson.M) mongo.Cursor {
 	collection := conn.Client.Database(coll.Database).Collection(coll.CollName)
 	res, err := collection.Find(conn.Ctx, filter)
 	if err != nil {
@@ -67,7 +57,8 @@ func Search(conn *Connection, coll Collection, filter bson.M) mongo.Cursor {
 }
 
 // Insert ..
-func Insert(conn *Connection, coll Collection, data interface{}) *mongo.InsertOneResult {
+func Insert(conn *domain.Connection, coll domain.Collection,
+	data interface{}) *mongo.InsertOneResult {
 	collection := conn.Client.Database(coll.Database).Collection(coll.CollName)
 	res, err := collection.InsertOne(conn.Ctx, data)
 	if err != nil {
@@ -78,7 +69,7 @@ func Insert(conn *Connection, coll Collection, data interface{}) *mongo.InsertOn
 }
 
 // Update ..
-func Update(conn *Connection, coll Collection, filter bson.M,
+func Update(conn *domain.Connection, coll domain.Collection, filter bson.M,
 	data interface{}) *mongo.UpdateResult {
 
 	collection := conn.Client.Database(coll.Database).Collection(coll.CollName)
@@ -91,7 +82,8 @@ func Update(conn *Connection, coll Collection, filter bson.M,
 }
 
 // Delete ..
-func Delete(conn *Connection, coll Collection, filter bson.M) *mongo.DeleteResult {
+func Delete(conn *domain.Connection, coll domain.Collection,
+	filter bson.M) *mongo.DeleteResult {
 	collection := conn.Client.Database(coll.Database).Collection(coll.CollName)
 	res, err := collection.DeleteOne(conn.Ctx, filter)
 	if err != nil {
