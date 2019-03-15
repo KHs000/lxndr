@@ -8,6 +8,7 @@ import (
 	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/bson/primitive"
 
+	"github.com/KHs000/lxndr/domain"
 	"github.com/KHs000/lxndr/pkg/identifier"
 	"github.com/KHs000/lxndr/pkg/mongodb"
 	"github.com/KHs000/lxndr/pkg/rndtoken"
@@ -17,7 +18,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	logAccess(r)
 	defer recovery("Method not allowed.")
 	validateMethod(w, r, "POST")
-	resp := Response{}
+	resp := domain.Response{}
 
 	type request struct {
 		email string
@@ -62,7 +63,7 @@ func editUser(w http.ResponseWriter, r *http.Request) {
 	logAccess(r)
 	defer recovery("Method not allowed.")
 	validateMethod(w, r, "POST")
-	resp := Response{}
+	resp := domain.Response{}
 
 	type request struct {
 		email string
@@ -103,7 +104,7 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	logAccess(r)
 	defer recovery("Method not allowed.")
 	validateMethod(w, r, "POST")
-	resp := Response{}
+	resp := domain.Response{}
 
 	type request struct {
 		email string
@@ -143,7 +144,7 @@ func listUsers(w http.ResponseWriter, r *http.Request) {
 	logAccess(r)
 	defer recovery("Method not allowed.")
 	validateMethod(w, r, "GET")
-	resp := Response{}
+	resp := domain.Response{}
 
 	coll := mongodb.Collection{Database: "lxndr", CollName: "user"}
 	res := mongodb.Search(mongodb.Conn, coll, nil)

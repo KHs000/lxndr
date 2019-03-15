@@ -7,20 +7,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/KHs000/lxndr/domain"
 	"github.com/KHs000/lxndr/pkg/mongodb"
 )
-
-// Error ..
-type Error struct {
-	Code  int
-	Error string
-}
-
-// Response ..
-type Response struct {
-	Message string   `json:"message"`
-	Data    []string `json:"data"`
-}
 
 // StartDatabase ..
 func StartDatabase() {
@@ -58,23 +47,24 @@ func recovery(message string) {
 
 func validateMethod(w http.ResponseWriter, r *http.Request, verb string) {
 	if r.Method != verb {
-		resp := Response{Message: "Method not allowed."}
+		resp := domain.Response{Message: "Method not allowed."}
 		writeResponse(w, http.StatusBadRequest, resp)
 		panic("Method not allowed.")
 	}
 }
 
-func processRequestBody(r *http.Request, b interface{}) (map[string]interface{}, *Error) {
+func processRequestBody(r *http.Request, b interface{}) (map[string]interface{},
+	*domain.Error) {
 	rb, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		return nil, &Error{
+		return nil, &domain.Error{
 			Code:  http.StatusInternalServerError,
 			Error: "Oh-uh, something's not quite right."}
 	}
 
 	err = json.Unmarshal(rb, &b)
 	if err != nil {
-		return nil, &Error{
+		return nil, &domain.Error{
 			Code:  http.StatusInternalServerError,
 			Error: "Oh-uh, something's not quite right."}
 	}
@@ -99,7 +89,7 @@ func defaultRoute(w http.ResponseWriter, r *http.Request) {
 	logAccess(r)
 	defer recovery("Method not allowed.")
 	validateMethod(w, r, "GET")
-	resp := Response{Message: "It works..."}
+	resp := domain.Response{Message: "It works..."}
 	writeResponse(w, http.StatusOK, resp)
 }
 
