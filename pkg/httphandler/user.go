@@ -9,7 +9,7 @@ import (
 	"github.com/mongodb/mongo-go-driver/bson/primitive"
 
 	"github.com/KHs000/lxndr/pkg/identifier"
-	"github.com/KHs000/lxndr/pkg/mongo"
+	"github.com/KHs000/lxndr/pkg/mongodb"
 	"github.com/KHs000/lxndr/pkg/rndtoken"
 )
 
@@ -40,8 +40,8 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	tkn, hash := rndtoken.SendToken(email)
 	newUser := identifier.User{Email: email, Hash: hash, Token: tkn}
 
-	coll := mongo.Collection{Database: "lxndr", CollName: "user"}
-	res := mongo.Insert(mongo.Conn, coll, newUser)
+	coll := mongodb.Collection{Database: "lxndr", CollName: "user"}
+	res := mongodb.Insert(mongodb.Conn, coll, newUser)
 
 	if id, ok := res.InsertedID.(primitive.ObjectID); ok {
 		message := fmt.Sprintf(`%v`, primitive.ObjectID.String(id))
@@ -82,9 +82,9 @@ func editUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	coll := mongo.Collection{Database: "lxndr", CollName: "user"}
-	res := mongo.Update(
-		mongo.Conn, coll, bson.M{"email": email}, bson.M{"$set": b})
+	coll := mongodb.Collection{Database: "lxndr", CollName: "user"}
+	res := mongodb.Update(
+		mongodb.Conn, coll, bson.M{"email": email}, bson.M{"$set": b})
 
 	if res.MatchedCount != 1 {
 		resp.Message = "This email matched no registry."
@@ -123,8 +123,8 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	coll := mongo.Collection{Database: "lxndr", CollName: "user"}
-	res := mongo.Delete(mongo.Conn, coll, bson.M{"email": email})
+	coll := mongodb.Collection{Database: "lxndr", CollName: "user"}
+	res := mongodb.Delete(mongodb.Conn, coll, bson.M{"email": email})
 
 	if res.DeletedCount != 1 {
 		resp.Message = "This email matched no registry."
@@ -145,11 +145,11 @@ func listUsers(w http.ResponseWriter, r *http.Request) {
 	validateMethod(w, r, "GET")
 	resp := Response{}
 
-	coll := mongo.Collection{Database: "lxndr", CollName: "user"}
-	res := mongo.Search(mongo.Conn, coll, nil)
+	coll := mongodb.Collection{Database: "lxndr", CollName: "user"}
+	res := mongodb.Search(mongodb.Conn, coll, nil)
 
 	var list []string
-	for res.Next(mongo.Conn.Ctx) {
+	for res.Next(mongodb.Conn.Ctx) {
 		var row bson.M
 		err := res.Decode(&row)
 		if err != nil {

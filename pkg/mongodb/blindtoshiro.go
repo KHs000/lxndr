@@ -1,4 +1,4 @@
-package mongo
+package mongodb
 
 import (
 	"context"
@@ -22,6 +22,21 @@ type Collection struct {
 
 // Conn ..
 var Conn *Connection
+
+// NewConn ..
+func NewConn(connStr string) (Connection, error) {
+	ctx := context.Background()
+
+	client, err := mongo.Connect(ctx, connStr)
+	if err != nil {
+		return Connection{}, err
+	}
+
+	return Connection{
+		Ctx:    ctx,
+		Client: client,
+	}, nil
+}
 
 // Connect ..
 func Connect(connStr string) {
