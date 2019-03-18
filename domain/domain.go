@@ -21,9 +21,9 @@ type (
 
 	// User ..
 	User struct {
-		Email string // email
-		Hash  string // hash email
-		Token string // password
+		Email string
+		Hash  string
+		Token string
 	}
 
 	// Connection ..
@@ -37,4 +37,65 @@ type (
 		Database string
 		CollName string
 	}
+
+	// Client ..
+	Client interface {
+		Database(name string) DataLayer
+		Close(ctx context.Context)
+	}
+
+	// DataLayer ..
+	DataLayer interface {
+		Collection(name string) Entities
+	}
+
+	// Entities ..
+	Entities interface {
+		Find(ctx context.Context, i interface{}) (Cursor, error)
+	}
+
+	// Cursor ..
+	Cursor interface {
+		Next(ctx context.Context) bool
+		Decode(i interface{}) error
+	}
+
+	// MongoClient ..
+	MongoClient struct {
+		mongo.Client
+	}
+
+	// MongoDatabase ..
+	MongoDatabase struct {
+		*mongo.Database
+	}
+
+	// MongoCollection ..
+	MongoCollection struct {
+		*mongo.Collection
+	}
+
+	// MongoCursor ..
+	MongoCursor struct {
+		mongo.Cursor
+	}
 )
+
+// Database ..
+func (c MongoClient) Database(name string) DataLayer {
+	return MongoDatabase{Database: c.Client.Database(name)}
+}
+
+// Collection ..
+func (d MongoDatabase) Collection(name string) Entities {
+	return MongoCollection{Collection: d.Database.Collection(name)}
+}
+
+// Find ..
+func (c MongoCollection) Find(ctx context.Context, i interface{}) (Cursor, error) {
+	cursor, err := c.Collection.Find(ctx, i)
+	if err != nil {
+		return MongoCursor{}, err
+	}
+	return MongoCursor{Cursor: cursor}, nil
+}

@@ -12,21 +12,6 @@ import (
 // Conn ..
 var Conn *domain.Connection
 
-// NewConn ..
-func NewConn(connStr string) (domain.Connection, error) {
-	ctx := context.Background()
-
-	client, err := mongo.Connect(ctx, connStr)
-	if err != nil {
-		return domain.Connection{}, err
-	}
-
-	return domain.Connection{
-		Ctx:    ctx,
-		Client: client,
-	}, nil
-}
-
 // Connect ..
 func Connect(connStr string) {
 	ctx := context.Background()
@@ -41,6 +26,11 @@ func Connect(connStr string) {
 	if ctx.Err() != nil {
 		log.Println(ctx.Err())
 	}
+}
+
+// Test ..
+func Test() {
+
 }
 
 // Search ..
