@@ -30,11 +30,11 @@ func StartDatabase() {
 
 	var config configs
 	json.Unmarshal(bytes, &config)
-	client, err := mongodb.NewConn(config.ConnStr)
-	if err != nil {
-		log.Fatal(err)
-	}
-	mongodb.Conn = &client
+	mongodb.Connect(config.ConnStr)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// mongodb.Conn = &client
 }
 
 func logAccess(r *http.Request) { log.Printf("Request at %q", r.URL.Path) }
@@ -100,4 +100,5 @@ func ExportRoutes() {
 	http.HandleFunc("/editUser", editUser)
 	http.HandleFunc("/deleteUser", deleteUser)
 	http.HandleFunc("/listUsers", listUsers)
+	http.HandleFunc("/test", testHandler)
 }

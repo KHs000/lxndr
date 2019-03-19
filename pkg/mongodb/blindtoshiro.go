@@ -29,8 +29,15 @@ func Connect(connStr string) {
 }
 
 // Test ..
-func Test() {
+func Test(client domain.Client, coll domain.Collection, filter interface{}) domain.Cursor {
+	collection := client.Database(coll.Database).Collection(coll.CollName)
+	res, err := collection.Find(client.Ctx(), filter)
+	if err != nil {
+		log.Fatal(err)
+	}
 
+	defer res.Close(client.Ctx())
+	return res
 }
 
 // Search ..

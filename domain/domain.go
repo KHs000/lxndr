@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/mongodb/mongo-go-driver/mongo"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type (
@@ -41,7 +42,7 @@ type (
 	// Client ..
 	Client interface {
 		Database(name string) DataLayer
-		Close(ctx context.Context)
+		Ctx() context.Context
 	}
 
 	// DataLayer ..
@@ -57,12 +58,15 @@ type (
 	// Cursor ..
 	Cursor interface {
 		Next(ctx context.Context) bool
+		Close(ctx context.Context) error
 		Decode(i interface{}) error
+		DecodeCursor() (map[string]interface{}, error)
 	}
 
 	// MongoClient ..
 	MongoClient struct {
-		mongo.Client
+		*mongo.Client
+		Context context.Context
 	}
 
 	// MongoDatabase ..
@@ -86,6 +90,11 @@ func (c MongoClient) Database(name string) DataLayer {
 	return MongoDatabase{Database: c.Client.Database(name)}
 }
 
+// Ctx ..
+func (c MongoClient) Ctx() context.Context {
+	return c.Context
+}
+
 // Collection ..
 func (d MongoDatabase) Collection(name string) Entities {
 	return MongoCollection{Collection: d.Database.Collection(name)}
@@ -98,4 +107,29 @@ func (c MongoCollection) Find(ctx context.Context, i interface{}) (Cursor, error
 		return MongoCursor{}, err
 	}
 	return MongoCursor{Cursor: cursor}, nil
+}
+
+// Next ..
+func (c MongoCursor) Next(ctx context.Context) bool {
+	return c.Cursor.Next(ctx)
+}
+
+// Close ..
+func (c MongoCursor) Close(ctx context.Context) error {
+	return c.Cursor.Close(ctx)
+}
+
+// Decode ..
+func (c MongoCursor) Decode(i interface{}) error {
+	return c.Cursor.Decode(i)
+}
+
+// DecodeCursor ..
+func (c MongoCursor) DecodeCursor() (map[string]interface{}, error) {
+	var row bson.M
+	err := c.Cursor.Decode(&row)
+	if err != nil {
+		return nil, err
+	}
+	return row, nil
 }

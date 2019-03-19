@@ -39,9 +39,9 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tkn, hash := rndtoken.SendToken(email)
-	newUser := identifier.User{Email: email, Hash: hash, Token: tkn}
+	newUser := domain.User{Email: email, Hash: hash, Token: tkn}
 
-	coll := mongodb.Collection{Database: "lxndr", CollName: "user"}
+	coll := domain.Collection{Database: "lxndr", CollName: "user"}
 	res := mongodb.Insert(mongodb.Conn, coll, newUser)
 
 	if id, ok := res.InsertedID.(primitive.ObjectID); ok {
@@ -83,7 +83,7 @@ func editUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	coll := mongodb.Collection{Database: "lxndr", CollName: "user"}
+	coll := domain.Collection{Database: "lxndr", CollName: "user"}
 	res := mongodb.Update(
 		mongodb.Conn, coll, bson.M{"email": email}, bson.M{"$set": b})
 
@@ -124,7 +124,7 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	coll := mongodb.Collection{Database: "lxndr", CollName: "user"}
+	coll := domain.Collection{Database: "lxndr", CollName: "user"}
 	res := mongodb.Delete(mongodb.Conn, coll, bson.M{"email": email})
 
 	if res.DeletedCount != 1 {
@@ -146,7 +146,7 @@ func listUsers(w http.ResponseWriter, r *http.Request) {
 	validateMethod(w, r, "GET")
 	resp := domain.Response{}
 
-	coll := mongodb.Collection{Database: "lxndr", CollName: "user"}
+	coll := domain.Collection{Database: "lxndr", CollName: "user"}
 	res := mongodb.Search(mongodb.Conn, coll, nil)
 
 	var list []string
@@ -166,4 +166,38 @@ func listUsers(w http.ResponseWriter, r *http.Request) {
 	resp.Data = list
 	log.Printf("Found %v users", len(list))
 	writeResponse(w, http.StatusOK, resp)
+}
+
+func testHandler(w http.ResponseWriter, r *http.Request) {
+	logAccess(r)
+	defer recovery("Method not allowed.")
+	validateMethod(w, r, "GET")
+
+	client := domain.MongoClient{Client: mongodb.Conn.Client, Context: mongodb.Conn.Ctx}
+	resp := test(client)
+
+	log.Printf("Found %v users", len(resp.Data))
+	writeResponse(w, http.StatusOK, resp)
+}
+
+func test(client domain.Client) domain.Response {
+	resp := domain.Response{}
+
+	coll := domain.Collection{Database: "lxndr", CollName: "user"}
+	res := mongodb.Test(client, coll, bson.M{})
+
+	var list []string
+	for res.Next(client.Ctx()) {
+		row, err := res.DecodeCursor()
+		if err != nil {
+			resp.Message = "Internal server error."
+			log.Println("Error decoding line from search.")
+			return resp
+		}
+		list = append(list, row["email"].(string))
+	}
+
+	resp.Message = ""
+	resp.Data = list
+	return resp
 }

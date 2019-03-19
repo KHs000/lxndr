@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/KHs000/lxndr/domain"
 )
 
 // TestProcessRequestBody ..
@@ -66,7 +68,7 @@ func TestDefaultRoute(t *testing.T) {
 			t.Error("Could not read request body")
 		}
 
-		body := Response{}
+		body := domain.Response{}
 		err = json.Unmarshal(b, &body)
 		if err != nil {
 			t.Error("Could not parse request body")
@@ -93,7 +95,7 @@ func TestDefaultRoute(t *testing.T) {
 			t.Error("Could not read request body")
 		}
 
-		body := Response{}
+		body := domain.Response{}
 		err = json.Unmarshal(b, &body)
 		if err != nil {
 			t.Error("Could not parse request body")

@@ -7,12 +7,13 @@ import (
 
 	"github.com/mongodb/mongo-go-driver/bson"
 
+	"github.com/KHs000/lxndr/domain"
 	"github.com/KHs000/lxndr/pkg/mongodb"
 )
 
 // ValidateNewUser ..
 func ValidateNewUser(email string) bool {
-	coll := mongodb.Collection{Database: "lxndr", CollName: "user"}
+	coll := domain.Collection{Database: "lxndr", CollName: "user"}
 	hits := mongodb.Search(mongodb.Conn, coll, bson.M{"email": email})
 
 	for hits.Next(mongodb.Conn.Ctx) {
