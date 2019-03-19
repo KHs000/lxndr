@@ -8,9 +8,24 @@ import (
 	"github.com/KHs000/lxndr/domain/mocks"
 )
 
+func newMockClient() mocks.MockClient {
+	return mocks.MockClient{
+		DatabaseFn: func(name string) domain.DataLayer {
+			return mocks.MockDatabase{
+				CollectionFn: func(name string) domain.Entities {
+					return mocks.MockCollection{}
+				},
+			}
+		},
+		CtxFn: func() context.Context {
+			return context.Background()
+		},
+	}
+}
+
 func TestCreateUser(t *testing.T) {
 	t.Run("should create a new user", func(t *testing.T) {
-
+		// N tem como reaproveitar (fácil) o client
 	})
 }
 

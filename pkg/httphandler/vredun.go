@@ -31,10 +31,8 @@ func StartDatabase() {
 	var config configs
 	json.Unmarshal(bytes, &config)
 	mongodb.Connect(config.ConnStr)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// mongodb.Conn = &client
+	client := mongodb.NewClient(config.ConnStr)
+	mongodb.Client = client.(domain.MongoClient)
 }
 
 func logAccess(r *http.Request) { log.Printf("Request at %q", r.URL.Path) }
@@ -96,7 +94,7 @@ func defaultRoute(w http.ResponseWriter, r *http.Request) {
 // ExportRoutes ..
 func ExportRoutes() {
 	http.HandleFunc("/", defaultRoute)
-	http.HandleFunc("/createUser", createUser)
+	http.HandleFunc("/createUser", createUserHandler)
 	http.HandleFunc("/editUser", editUser)
 	http.HandleFunc("/deleteUser", deleteUser)
 	http.HandleFunc("/listUsers", listUsers)

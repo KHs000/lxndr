@@ -12,6 +12,21 @@ import (
 // Conn ..
 var Conn *domain.Connection
 
+// Client ..
+var Client domain.MongoClient
+
+// NewClient ..
+func NewClient(connStr string) domain.Client {
+	ctx := context.Background()
+
+	client, err := mongo.Connect(ctx, connStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return domain.MongoClient{Client: client, Context: ctx}
+}
+
 // Connect ..
 func Connect(connStr string) {
 	ctx := context.Background()
@@ -54,15 +69,15 @@ func Search(conn *domain.Connection, coll domain.Collection,
 }
 
 // Insert ..
-func Insert(conn *domain.Connection, coll domain.Collection,
-	data interface{}) *mongo.InsertOneResult {
-	collection := conn.Client.Database(coll.Database).Collection(coll.CollName)
-	res, err := collection.InsertOne(conn.Ctx, data)
+func Insert(client domain.Client, coll domain.Collection,
+	data interface{}) domain.MongoInsert {
+	collection := client.Database(coll.Database).Collection(coll.CollName)
+	res, err := collection.InsertOne(client.Ctx(), data)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return res
+	return res.(domain.MongoInsert)
 }
 
 // Update ..

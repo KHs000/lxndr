@@ -14,11 +14,10 @@ import (
 	"github.com/KHs000/lxndr/pkg/rndtoken"
 )
 
-func createUser(w http.ResponseWriter, r *http.Request) {
+func createUserHandler(w http.ResponseWriter, r *http.Request) {
 	logAccess(r)
 	defer recovery("Method not allowed.")
 	validateMethod(w, r, "POST")
-	resp := domain.Response{}
 
 	type request struct {
 		email string
@@ -29,34 +28,38 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email := b["email"].(string)
+	code, resp := createUser(b)
+	writeResponse(w, code, resp)
+}
+
+func createUser(body map[string]interface{}) (int, interface{}) {
+	resp := domain.Response{}
+
+	email := body["email"].(string)
 	isNew := identifier.ValidateNewUser(email)
 	if !isNew {
 		resp.Message = "This email has already been registred."
 		log.Println("Email conflict.")
-		writeResponse(w, http.StatusConflict, resp)
-		return
+		return http.StatusConflict, resp
 	}
 
 	tkn, hash := rndtoken.SendToken(email)
 	newUser := domain.User{Email: email, Hash: hash, Token: tkn}
 
 	coll := domain.Collection{Database: "lxndr", CollName: "user"}
-	res := mongodb.Insert(mongodb.Conn, coll, newUser)
+	res := mongodb.Insert(mongodb.Client, coll, newUser)
 
-	if id, ok := res.InsertedID.(primitive.ObjectID); ok {
+	if id, ok := res.InsertOneResult.InsertedID.(primitive.ObjectID); ok {
 		message := fmt.Sprintf(`%v`, primitive.ObjectID.String(id))
 		resp.Message = message
 		log.Println(message)
-		writeResponse(w, http.StatusCreated, resp)
-		return
+		return http.StatusCreated, domain.Response{Message: message}
 	}
 
 	message := "There might be an error, please retry your operation."
 	resp.Message = message
 	log.Println(message)
-	writeResponse(w, http.StatusInternalServerError, resp)
-	return
+	return http.StatusInternalServerError, domain.Response{Message: message}
 }
 
 func editUser(w http.ResponseWriter, r *http.Request) {

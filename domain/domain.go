@@ -53,6 +53,7 @@ type (
 	// Entities ..
 	Entities interface {
 		Find(ctx context.Context, i interface{}) (Cursor, error)
+		InsertOne(ctx context.Context, i interface{}) (interface{}, error)
 	}
 
 	// Cursor ..
@@ -65,7 +66,7 @@ type (
 
 	// MongoClient ..
 	MongoClient struct {
-		*mongo.Client
+		Client  *mongo.Client
 		Context context.Context
 	}
 
@@ -82,6 +83,11 @@ type (
 	// MongoCursor ..
 	MongoCursor struct {
 		mongo.Cursor
+	}
+
+	// MongoInsert ..
+	MongoInsert struct {
+		*mongo.InsertOneResult
 	}
 )
 
@@ -107,6 +113,15 @@ func (c MongoCollection) Find(ctx context.Context, i interface{}) (Cursor, error
 		return MongoCursor{}, err
 	}
 	return MongoCursor{Cursor: cursor}, nil
+}
+
+// InsertOne ..
+func (c MongoCollection) InsertOne(ctx context.Context, i interface{}) (interface{}, error) {
+	result, err := c.Collection.InsertOne(ctx, i)
+	if err != nil {
+		return MongoInsert{}, err
+	}
+	return MongoInsert{InsertOneResult: result}, nil
 }
 
 // Next ..
