@@ -23,6 +23,9 @@ func TestTest(t *testing.T) {
 				controlCursor = !controlCursor
 				return hasNext
 			},
+			CloseFn: func(ctx context.Context) error {
+				return nil
+			},
 			DecodeCursorFn: func() (map[string]interface{}, error) {
 				fakeResult := map[string]interface{}{"email": "felipe.carbone@dito.com.br"}
 				return fakeResult, nil
@@ -37,6 +40,7 @@ func TestTest(t *testing.T) {
 							FindFn: func(ctx context.Context, i interface{}) (domain.Cursor, error) {
 								return mocks.MockCursor{
 									NextFn:         cursor.NextFn,
+									CloseFn:        cursor.CloseFn,
 									DecodeCursorFn: cursor.DecodeCursorFn,
 								}, nil
 							},
