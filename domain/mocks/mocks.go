@@ -29,7 +29,7 @@ type (
 		*mongo.Collection
 
 		FindFn      func(ctx context.Context, i interface{}) (domain.Cursor, error)
-		InsertOneFn func(ctx context.Context, i interface{}) (interface{}, error)
+		InsertOneFn func(ctx context.Context, i interface{}) (domain.MongoInsert, error)
 	}
 
 	// MockCursor ..
@@ -40,6 +40,11 @@ type (
 		CloseFn        func(ctx context.Context) error
 		DecodeFn       func(i interface{}) error
 		DecodeCursorFn func() (map[string]interface{}, error)
+	}
+
+	// MockInsert ..
+	MockInsert struct {
+		ID string
 	}
 )
 
@@ -68,7 +73,7 @@ func (c MockCollection) Find(ctx context.Context, i interface{}) (domain.Cursor,
 }
 
 // InsertOne ..
-func (c MockCollection) InsertOne(ctx context.Context, i interface{}) (interface{}, error) {
+func (c MockCollection) InsertOne(ctx context.Context, i interface{}) (domain.MongoInsert, error) {
 	result, err := c.InsertOneFn(ctx, i)
 	if err != nil {
 		return domain.MongoInsert{}, err

@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 
+	"github.com/mongodb/mongo-go-driver/bson/primitive"
 	"github.com/mongodb/mongo-go-driver/mongo"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -53,7 +54,7 @@ type (
 	// Entities ..
 	Entities interface {
 		Find(ctx context.Context, i interface{}) (Cursor, error)
-		InsertOne(ctx context.Context, i interface{}) (interface{}, error)
+		InsertOne(ctx context.Context, i interface{}) (MongoInsert, error)
 	}
 
 	// Cursor ..
@@ -87,7 +88,7 @@ type (
 
 	// MongoInsert ..
 	MongoInsert struct {
-		*mongo.InsertOneResult
+		ObjectID primitive.ObjectID
 	}
 )
 
@@ -116,12 +117,12 @@ func (c MongoCollection) Find(ctx context.Context, i interface{}) (Cursor, error
 }
 
 // InsertOne ..
-func (c MongoCollection) InsertOne(ctx context.Context, i interface{}) (interface{}, error) {
+func (c MongoCollection) InsertOne(ctx context.Context, i interface{}) (MongoInsert, error) {
 	result, err := c.Collection.InsertOne(ctx, i)
 	if err != nil {
 		return MongoInsert{}, err
 	}
-	return MongoInsert{InsertOneResult: result}, nil
+	return MongoInsert{ObjectID: result.InsertedID.(primitive.ObjectID)}, nil
 }
 
 // Next ..

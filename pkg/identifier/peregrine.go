@@ -12,13 +12,13 @@ import (
 )
 
 // ValidateNewUser ..
-func ValidateNewUser(email string) bool {
+func ValidateNewUser(client domain.Client, email string) bool {
 	coll := domain.Collection{Database: "lxndr", CollName: "user"}
-	hits := mongodb.Search(mongodb.Conn, coll, bson.M{"email": email})
+	hits := mongodb.Search(client, coll, bson.M{"email": email})
 
-	for hits.Next(mongodb.Conn.Ctx) {
+	for hits.Next(client.Ctx()) {
 		var row bson.M
-		err := hits.Decode(&row)
+		row, err := hits.DecodeCursor()
 		if err != nil {
 			log.Println("Error decoding line from search.")
 			return false

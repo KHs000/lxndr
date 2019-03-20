@@ -6,6 +6,7 @@ import (
 
 	"github.com/KHs000/lxndr/domain"
 	"github.com/mongodb/mongo-go-driver/bson"
+	"github.com/mongodb/mongo-go-driver/bson/primitive"
 	"github.com/mongodb/mongo-go-driver/mongo"
 )
 
@@ -56,28 +57,28 @@ func Test(client domain.Client, coll domain.Collection, filter interface{}) doma
 }
 
 // Search ..
-func Search(conn *domain.Connection, coll domain.Collection,
-	filter bson.M) mongo.Cursor {
-	collection := conn.Client.Database(coll.Database).Collection(coll.CollName)
-	res, err := collection.Find(conn.Ctx, filter)
+func Search(client domain.Client, coll domain.Collection,
+	filter bson.M) domain.Cursor {
+	collection := client.Database(coll.Database).Collection(coll.CollName)
+	res, err := collection.Find(client.Ctx(), filter)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	defer res.Close(conn.Ctx)
+	defer res.Close(client.Ctx())
 	return res
 }
 
 // Insert ..
 func Insert(client domain.Client, coll domain.Collection,
-	data interface{}) domain.MongoInsert {
+	data interface{}) (primitive.ObjectID, error) {
 	collection := client.Database(coll.Database).Collection(coll.CollName)
 	res, err := collection.InsertOne(client.Ctx(), data)
 	if err != nil {
-		log.Fatal(err)
+		return primitive.ObjectID{}, err
 	}
 
-	return res.(domain.MongoInsert)
+	return res.ObjectID, nil
 }
 
 // Update ..

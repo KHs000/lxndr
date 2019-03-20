@@ -28,15 +28,15 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	code, resp := createUser(b)
+	code, resp := createUser(mongodb.Client, b)
 	writeResponse(w, code, resp)
 }
 
-func createUser(body map[string]interface{}) (int, interface{}) {
+func createUser(client domain.Client, body map[string]interface{}) (int, interface{}) {
 	resp := domain.Response{}
 
 	email := body["email"].(string)
-	isNew := identifier.ValidateNewUser(email)
+	isNew := identifier.ValidateNewUser(client, email)
 	if !isNew {
 		resp.Message = "This email has already been registred."
 		log.Println("Email conflict.")
@@ -47,19 +47,19 @@ func createUser(body map[string]interface{}) (int, interface{}) {
 	newUser := domain.User{Email: email, Hash: hash, Token: tkn}
 
 	coll := domain.Collection{Database: "lxndr", CollName: "user"}
-	res := mongodb.Insert(mongodb.Client, coll, newUser)
+	id, err := mongodb.Insert(client, coll, newUser)
 
-	if id, ok := res.InsertOneResult.InsertedID.(primitive.ObjectID); ok {
-		message := fmt.Sprintf(`%v`, primitive.ObjectID.String(id))
+	if err != nil {
+		message := "There might be an error, please retry your operation."
 		resp.Message = message
 		log.Println(message)
-		return http.StatusCreated, domain.Response{Message: message}
+		return http.StatusInternalServerError, domain.Response{Message: message}
 	}
 
-	message := "There might be an error, please retry your operation."
+	message := fmt.Sprintf(`%v`, primitive.ObjectID.String(id))
 	resp.Message = message
 	log.Println(message)
-	return http.StatusInternalServerError, domain.Response{Message: message}
+	return http.StatusCreated, domain.Response{Message: message}
 }
 
 func editUser(w http.ResponseWriter, r *http.Request) {
@@ -78,7 +78,7 @@ func editUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	email := b["email"].(string)
-	isNew := identifier.ValidateNewUser(email)
+	isNew := identifier.ValidateNewUser(mongodb.Client, email)
 	if isNew {
 		resp.Message = "This email is not registred."
 		log.Println("Email not registred.")
@@ -119,7 +119,7 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	email := b["email"].(string)
-	isNew := identifier.ValidateNewUser(email)
+	isNew := identifier.ValidateNewUser(mongodb.Client, email)
 	if isNew {
 		resp.Message = "This email is not registred."
 		log.Println("Email not registred.")
@@ -150,7 +150,7 @@ func listUsers(w http.ResponseWriter, r *http.Request) {
 	resp := domain.Response{}
 
 	coll := domain.Collection{Database: "lxndr", CollName: "user"}
-	res := mongodb.Search(mongodb.Conn, coll, nil)
+	res := mongodb.Search(mongodb.Client, coll, nil)
 
 	var list []string
 	for res.Next(mongodb.Conn.Ctx) {
