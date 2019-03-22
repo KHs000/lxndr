@@ -14,14 +14,15 @@ import (
 	"github.com/KHs000/lxndr/pkg/rndtoken"
 )
 
+type request struct {
+	email string
+}
+
 func createUserHandler(w http.ResponseWriter, r *http.Request) {
 	logAccess(r)
 	defer recovery("Method not allowed.")
 	validateMethod(w, r, "POST")
 
-	type request struct {
-		email string
-	}
 	b, e := processRequestBody(r, request{})
 	if e != nil {
 		writeResponse(w, e.Code, e.Error)
@@ -60,6 +61,21 @@ func createUser(client domain.Client, body map[string]interface{}) (int, interfa
 	resp.Message = message
 	log.Println(message)
 	return http.StatusCreated, domain.Response{Message: message}
+}
+
+func editUserHandler(w http.ResponseWriter, r *http.Request) {
+	logAccess(r)
+	defer recovery("Method not allowed.")
+	validateMethod(w, r, "POST")
+
+	// b, e := processRequestBody(r, request{})
+	// if e != nil {
+	// 	writeResponse(w, e.Code, e.Error)
+	// 	return
+	// }
+
+	// code, resp := editUser(mongodb.Client, b)
+	// writeResponse(w, code, resp)
 }
 
 func editUser(w http.ResponseWriter, r *http.Request) {

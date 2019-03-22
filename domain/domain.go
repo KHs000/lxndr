@@ -3,9 +3,9 @@ package domain
 import (
 	"context"
 
+	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/bson/primitive"
 	"github.com/mongodb/mongo-go-driver/mongo"
-	"gopkg.in/mgo.v2/bson"
 )
 
 type (
