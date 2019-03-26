@@ -68,55 +68,41 @@ func editUserHandler(w http.ResponseWriter, r *http.Request) {
 	defer recovery("Method not allowed.")
 	validateMethod(w, r, "POST")
 
-	// b, e := processRequestBody(r, request{})
-	// if e != nil {
-	// 	writeResponse(w, e.Code, e.Error)
-	// 	return
-	// }
-
-	// code, resp := editUser(mongodb.Client, b)
-	// writeResponse(w, code, resp)
-}
-
-func editUser(w http.ResponseWriter, r *http.Request) {
-	logAccess(r)
-	defer recovery("Method not allowed.")
-	validateMethod(w, r, "POST")
-	resp := domain.Response{}
-
-	type request struct {
-		email string
-	}
 	b, e := processRequestBody(r, request{})
 	if e != nil {
 		writeResponse(w, e.Code, e.Error)
 		return
 	}
 
-	email := b["email"].(string)
-	isNew := identifier.ValidateNewUser(mongodb.Client, email)
+	code, resp := editUser(mongodb.Client, b)
+	writeResponse(w, code, resp)
+}
+
+func editUser(client domain.Client, body map[string]interface{}) (int, interface{}) {
+	resp := domain.Response{}
+
+	email := body["email"].(string)
+	isNew := identifier.ValidateNewUser(client, email)
 	if isNew {
 		resp.Message = "This email is not registred."
 		log.Println("Email not registred.")
-		writeResponse(w, http.StatusNotFound, resp)
-		return
+		return http.StatusNotFound, resp
 	}
 
 	coll := domain.Collection{Database: "lxndr", CollName: "user"}
 	res := mongodb.Update(
-		mongodb.Conn, coll, bson.M{"email": email}, bson.M{"$set": b})
+		client, coll, bson.M{"email": email}, bson.M{"$set": body})
 
 	if res.MatchedCount != 1 {
 		resp.Message = "This email matched no registry."
 		log.Println("This email matched no registry.")
-		writeResponse(w, http.StatusNotFound, resp)
-		return
+		return http.StatusNotFound, resp
 	}
 
 	message := fmt.Sprintf(`User '%v' updated.`, email)
 	resp.Message = message
 	log.Println(message)
-	writeResponse(w, http.StatusOK, resp)
+	return http.StatusOK, resp
 }
 
 func deleteUser(w http.ResponseWriter, r *http.Request) {

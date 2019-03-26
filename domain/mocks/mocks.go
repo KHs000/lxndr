@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/KHs000/lxndr/domain"
+	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/mongo"
 )
 
@@ -28,8 +29,20 @@ type (
 	MockCollection struct {
 		*mongo.Collection
 
-		FindFn      func(ctx context.Context, i interface{}) (domain.Cursor, error)
-		InsertOneFn func(ctx context.Context, i interface{}) (domain.MongoInsert, error)
+		FindFn func(ctx context.Context,
+			i interface{},
+		) (domain.Cursor, error)
+
+		InsertOneFn func(
+			ctx context.Context,
+			i interface{},
+		) (domain.MongoInsert, error)
+
+		UpdateOneFn func(
+			ctx context.Context,
+			filter bson.M,
+			i interface{},
+		) (domain.MongoUpdate, error)
 	}
 
 	// MockCursor ..
@@ -40,11 +53,6 @@ type (
 		CloseFn        func(ctx context.Context) error
 		DecodeFn       func(i interface{}) error
 		DecodeCursorFn func() (map[string]interface{}, error)
-	}
-
-	// MockInsert ..
-	MockInsert struct {
-		ID string
 	}
 )
 
@@ -64,7 +72,10 @@ func (c MockDatabase) Collection(name string) domain.Entities {
 }
 
 // Find ..
-func (c MockCollection) Find(ctx context.Context, i interface{}) (domain.Cursor, error) {
+func (c MockCollection) Find(
+	ctx context.Context,
+	i interface{},
+) (domain.Cursor, error) {
 	cursor, err := c.FindFn(ctx, i)
 	if err != nil {
 		return MockCursor{}, err
@@ -73,10 +84,26 @@ func (c MockCollection) Find(ctx context.Context, i interface{}) (domain.Cursor,
 }
 
 // InsertOne ..
-func (c MockCollection) InsertOne(ctx context.Context, i interface{}) (domain.MongoInsert, error) {
+func (c MockCollection) InsertOne(
+	ctx context.Context,
+	i interface{},
+) (domain.MongoInsert, error) {
 	result, err := c.InsertOneFn(ctx, i)
 	if err != nil {
 		return domain.MongoInsert{}, err
+	}
+	return result, nil
+}
+
+// UpdateOne ..
+func (c MockCollection) UpdateOne(
+	ctx context.Context,
+	filter bson.M,
+	i interface{},
+) (domain.MongoUpdate, error) {
+	result, err := c.UpdateOneFn(ctx, filter, i)
+	if err != nil {
+		return domain.MongoUpdate{}, nil
 	}
 	return result, nil
 }

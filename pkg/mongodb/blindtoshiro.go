@@ -82,11 +82,11 @@ func Insert(client domain.Client, coll domain.Collection,
 }
 
 // Update ..
-func Update(conn *domain.Connection, coll domain.Collection, filter bson.M,
-	data interface{}) *mongo.UpdateResult {
+func Update(client domain.Client, coll domain.Collection, filter bson.M,
+	data interface{}) domain.MongoUpdate {
 
-	collection := conn.Client.Database(coll.Database).Collection(coll.CollName)
-	res, err := collection.UpdateOne(conn.Ctx, filter, data)
+	collection := client.Database(coll.Database).Collection(coll.CollName)
+	res, err := collection.UpdateOne(client.Ctx(), filter, data)
 	if err != nil {
 		log.Fatal(err)
 	}

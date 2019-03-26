@@ -95,7 +95,7 @@ func defaultRoute(w http.ResponseWriter, r *http.Request) {
 func ExportRoutes() {
 	http.HandleFunc("/", defaultRoute)
 	http.HandleFunc("/createUser", createUserHandler)
-	http.HandleFunc("/editUser", editUser)
+	http.HandleFunc("/editUser", editUserHandler)
 	http.HandleFunc("/deleteUser", deleteUser)
 	http.HandleFunc("/listUsers", listUsers)
 	http.HandleFunc("/test", testHandler)

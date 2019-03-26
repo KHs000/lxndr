@@ -55,6 +55,7 @@ type (
 	Entities interface {
 		Find(ctx context.Context, i interface{}) (Cursor, error)
 		InsertOne(ctx context.Context, i interface{}) (MongoInsert, error)
+		UpdateOne(ctx context.Context, filter bson.M, i interface{}) (MongoUpdate, error)
 	}
 
 	// Cursor ..
@@ -90,6 +91,11 @@ type (
 	MongoInsert struct {
 		ObjectID primitive.ObjectID
 	}
+
+	// MongoUpdate ..
+	MongoUpdate struct {
+		MatchedCount int
+	}
 )
 
 // Database ..
@@ -108,7 +114,10 @@ func (d MongoDatabase) Collection(name string) Entities {
 }
 
 // Find ..
-func (c MongoCollection) Find(ctx context.Context, i interface{}) (Cursor, error) {
+func (c MongoCollection) Find(
+	ctx context.Context,
+	i interface{},
+) (Cursor, error) {
 	cursor, err := c.Collection.Find(ctx, i)
 	if err != nil {
 		return MongoCursor{}, err
@@ -117,12 +126,28 @@ func (c MongoCollection) Find(ctx context.Context, i interface{}) (Cursor, error
 }
 
 // InsertOne ..
-func (c MongoCollection) InsertOne(ctx context.Context, i interface{}) (MongoInsert, error) {
+func (c MongoCollection) InsertOne(
+	ctx context.Context,
+	i interface{},
+) (MongoInsert, error) {
 	result, err := c.Collection.InsertOne(ctx, i)
 	if err != nil {
 		return MongoInsert{}, err
 	}
 	return MongoInsert{ObjectID: result.InsertedID.(primitive.ObjectID)}, nil
+}
+
+// UpdateOne ..
+func (c MongoCollection) UpdateOne(
+	ctx context.Context,
+	filter bson.M,
+	i interface{},
+) (MongoUpdate, error) {
+	result, err := c.Collection.UpdateOne(ctx, filter, i)
+	if err != nil {
+		return MongoUpdate{}, err
+	}
+	return MongoUpdate{MatchedCount: int(result.MatchedCount)}, nil
 }
 
 // Next ..

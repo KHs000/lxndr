@@ -7,11 +7,12 @@ import (
 
 	"github.com/KHs000/lxndr/domain"
 	"github.com/KHs000/lxndr/domain/mocks"
+	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/bson/primitive"
 )
 
 func TestCreateUser(t *testing.T) {
-	fakeEmail := map[string]interface{}{"email": "test@email.com"}
+	fakeEmail := map[string]interface{}{"email": "fake@email.com"}
 
 	t.Run("should create a new user", func(t *testing.T) {
 		client := defaultClientFn(
@@ -23,6 +24,7 @@ func TestCreateUser(t *testing.T) {
 						nil,
 					),
 					defaultInsertFn(primitive.ObjectID{}),
+					nil,
 				),
 			),
 		)
@@ -43,7 +45,7 @@ func TestCreateUser(t *testing.T) {
 						defaultCloseFn(),
 						defaultDecodeCursorFn(map[string]interface{}{"_id": "fakeID"}),
 					),
-					nil,
+					nil, nil,
 				),
 			),
 		)
@@ -52,6 +54,59 @@ func TestCreateUser(t *testing.T) {
 
 		if code != http.StatusConflict {
 			t.Errorf("Expected status code to be 409, got %v", code)
+		}
+	})
+}
+
+func TestEditUser(t *testing.T) {
+	fakeEdit := map[string]interface{}{"email": "fake@email.com", "hash": "fakeHash"}
+
+	t.Run("should edit a user based on a valid email", func(t *testing.T) {
+		customNextFn := func(control bool) func(ctx context.Context) bool {
+			return func(ctx context.Context) bool {
+				hasNext := control
+				control = !control
+				return hasNext
+			}
+		}
+
+		client := defaultClientFn(
+			defaultDatabaseFn(
+				defaultCollectionFn(
+					defaultFindFn(
+						customNextFn(true),
+						defaultCloseFn(),
+						defaultDecodeCursorFn(map[string]interface{}{"_id": "fakeID"}),
+					),
+					nil,
+					defaultUpdateFn(1),
+				),
+			),
+		)
+
+		code, _ := editUser(client, fakeEdit)
+		if code != http.StatusOK {
+			t.Errorf("Expected status code to be 200, got %v", code)
+		}
+	})
+
+	t.Run("should not allow edit for unregistered emails", func(t *testing.T) {
+		client := defaultClientFn(
+			defaultDatabaseFn(
+				defaultCollectionFn(
+					defaultFindFn(
+						defaultNextFn(false),
+						defaultCloseFn(),
+						nil,
+					),
+					nil, nil,
+				),
+			),
+		)
+
+		code, _ := editUser(client, fakeEdit)
+		if code != http.StatusNotFound {
+			t.Errorf("Expected status code to be 404, got %v", code)
 		}
 	})
 }
@@ -76,7 +131,7 @@ func TestTest(t *testing.T) {
 							map[string]interface{}{"email": "test@email.com"},
 						),
 					),
-					nil,
+					nil, nil,
 				),
 			),
 		)
@@ -112,13 +167,27 @@ func defaultCtxFn() func() context.Context {
 }
 
 func defaultCollectionFn(
-	findFn func(context.Context, interface{}) (domain.Cursor, error),
-	insertFn func(ctx context.Context, i interface{}) (domain.MongoInsert, error),
+	findFn func(
+		context.Context,
+		interface{},
+	) (domain.Cursor, error),
+
+	insertFn func(
+		ctx context.Context,
+		i interface{},
+	) (domain.MongoInsert, error),
+
+	updateFn func(
+		ctx context.Context,
+		filter bson.M,
+		i interface{},
+	) (domain.MongoUpdate, error),
 ) func(name string) domain.Entities {
 	return func(name string) domain.Entities {
 		return mocks.MockCollection{
 			FindFn:      findFn,
 			InsertOneFn: insertFn,
+			UpdateOneFn: updateFn,
 		}
 	}
 }
@@ -137,9 +206,26 @@ func defaultFindFn(
 	}
 }
 
-func defaultInsertFn(pID primitive.ObjectID) func(ctx context.Context, i interface{}) (domain.MongoInsert, error) {
+func defaultInsertFn(
+	pID primitive.ObjectID,
+) func(ctx context.Context, i interface{}) (domain.MongoInsert, error) {
 	return func(ctx context.Context, i interface{}) (domain.MongoInsert, error) {
 		fakeResult := domain.MongoInsert{ObjectID: pID}
+		return fakeResult, nil
+	}
+}
+
+func defaultUpdateFn(count int) func(
+	ctx context.Context,
+	filter bson.M,
+	i interface{},
+) (domain.MongoUpdate, error) {
+	return func(
+		ctx context.Context,
+		filter bson.M,
+		i interface{},
+	) (domain.MongoUpdate, error) {
+		fakeResult := domain.MongoUpdate{MatchedCount: count}
 		return fakeResult, nil
 	}
 }
@@ -156,7 +242,9 @@ func defaultCloseFn() func(context.Context) error {
 	}
 }
 
-func defaultDecodeCursorFn(fakeResult map[string]interface{}) func() (map[string]interface{}, error) {
+func defaultDecodeCursorFn(
+	fakeResult map[string]interface{},
+) func() (map[string]interface{}, error) {
 	return func() (map[string]interface{}, error) {
 		return fakeResult, nil
 	}
