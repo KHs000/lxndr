@@ -83,25 +83,25 @@ func Insert(client domain.Client, coll domain.Collection,
 
 // Update ..
 func Update(client domain.Client, coll domain.Collection, filter bson.M,
-	data interface{}) domain.MongoUpdate {
+	data interface{}) (domain.MongoUpdate, error) {
 
 	collection := client.Database(coll.Database).Collection(coll.CollName)
 	res, err := collection.UpdateOne(client.Ctx(), filter, data)
 	if err != nil {
-		log.Fatal(err)
+		return domain.MongoUpdate{}, err
 	}
 
-	return res
+	return res, nil
 }
 
 // Delete ..
-func Delete(conn *domain.Connection, coll domain.Collection,
-	filter bson.M) *mongo.DeleteResult {
-	collection := conn.Client.Database(coll.Database).Collection(coll.CollName)
-	res, err := collection.DeleteOne(conn.Ctx, filter)
+func Delete(client domain.Client, coll domain.Collection,
+	filter bson.M) (domain.MongoDelete, error) {
+	collection := client.Database(coll.Database).Collection(coll.CollName)
+	res, err := collection.DeleteOne(client.Ctx(), filter)
 	if err != nil {
-		log.Fatal(err)
+		return domain.MongoDelete{}, err
 	}
 
-	return res
+	return domain.MongoDelete{DeletedCount: int(res.DeletedCount)}, nil
 }

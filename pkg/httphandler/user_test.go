@@ -24,13 +24,12 @@ func TestCreateUser(t *testing.T) {
 						nil,
 					),
 					defaultInsertFn(primitive.ObjectID{}),
-					nil,
+					nil, nil,
 				),
 			),
 		)
 
 		code, _ := createUser(client, fakeEmail)
-
 		if code != http.StatusCreated {
 			t.Errorf("Expected status code to be 201, got %v", code)
 		}
@@ -45,13 +44,12 @@ func TestCreateUser(t *testing.T) {
 						defaultCloseFn(),
 						defaultDecodeCursorFn(map[string]interface{}{"_id": "fakeID"}),
 					),
-					nil, nil,
+					nil, nil, nil,
 				),
 			),
 		)
 
 		code, _ := createUser(client, fakeEmail)
-
 		if code != http.StatusConflict {
 			t.Errorf("Expected status code to be 409, got %v", code)
 		}
@@ -79,7 +77,7 @@ func TestEditUser(t *testing.T) {
 						defaultDecodeCursorFn(map[string]interface{}{"_id": "fakeID"}),
 					),
 					nil,
-					defaultUpdateFn(1),
+					defaultUpdateFn(1), nil,
 				),
 			),
 		)
@@ -99,7 +97,7 @@ func TestEditUser(t *testing.T) {
 						defaultCloseFn(),
 						nil,
 					),
-					nil, nil,
+					nil, nil, nil,
 				),
 			),
 		)
@@ -111,8 +109,10 @@ func TestEditUser(t *testing.T) {
 	})
 }
 
-func TestTest(t *testing.T) {
-	t.Run("should return a user list", func(t *testing.T) {
+func TestDeleteUser(t *testing.T) {
+	fakeDelete := map[string]interface{}{"email": "fake@email.com"}
+
+	t.Run("should delete a user based on a valid email", func(t *testing.T) {
 		customNextFn := func(control bool) func(ctx context.Context) bool {
 			return func(ctx context.Context) bool {
 				hasNext := control
@@ -127,18 +127,37 @@ func TestTest(t *testing.T) {
 					defaultFindFn(
 						customNextFn(true),
 						defaultCloseFn(),
-						defaultDecodeCursorFn(
-							map[string]interface{}{"email": "test@email.com"},
-						),
+						defaultDecodeCursorFn(map[string]interface{}{"_id": "fakeID"}),
 					),
 					nil, nil,
+					defaultDeleteFn(1),
 				),
 			),
 		)
 
-		resp := test(client)
-		if len(resp.Data) != 1 {
-			t.Errorf("Expected resp.Data to have lenght 1, got %v", len(resp.Data))
+		code, _ := deleteUser(client, fakeDelete)
+		if code != 200 {
+			t.Errorf("Expected status code to be 200, got %v", code)
+		}
+	})
+
+	t.Run("should not allow removal of a non registred email", func(t *testing.T) {
+		client := defaultClientFn(
+			defaultDatabaseFn(
+				defaultCollectionFn(
+					defaultFindFn(
+						defaultNextFn(false),
+						defaultCloseFn(),
+						nil,
+					),
+					nil, nil, nil,
+				),
+			),
+		)
+
+		code, _ := deleteUser(client, fakeDelete)
+		if code != 404 {
+			t.Errorf("Expected status code to be 404, got %v", code)
 		}
 	})
 }
@@ -182,12 +201,18 @@ func defaultCollectionFn(
 		filter bson.M,
 		i interface{},
 	) (domain.MongoUpdate, error),
+
+	deleteFn func(
+		ctx context.Context,
+		filter bson.M,
+	) (domain.MongoDelete, error),
 ) func(name string) domain.Entities {
 	return func(name string) domain.Entities {
 		return mocks.MockCollection{
 			FindFn:      findFn,
 			InsertOneFn: insertFn,
 			UpdateOneFn: updateFn,
+			DeleteOneFn: deleteFn,
 		}
 	}
 }
@@ -226,6 +251,19 @@ func defaultUpdateFn(count int) func(
 		i interface{},
 	) (domain.MongoUpdate, error) {
 		fakeResult := domain.MongoUpdate{MatchedCount: count}
+		return fakeResult, nil
+	}
+}
+
+func defaultDeleteFn(count int) func(
+	ctx context.Context,
+	filter bson.M,
+) (domain.MongoDelete, error) {
+	return func(
+		ctx context.Context,
+		filter bson.M,
+	) (domain.MongoDelete, error) {
+		fakeResult := domain.MongoDelete{DeletedCount: count}
 		return fakeResult, nil
 	}
 }

@@ -43,6 +43,11 @@ type (
 			filter bson.M,
 			i interface{},
 		) (domain.MongoUpdate, error)
+
+		DeleteOneFn func(
+			ctx context.Context,
+			filter bson.M,
+		) (domain.MongoDelete, error)
 	}
 
 	// MockCursor ..
@@ -103,7 +108,19 @@ func (c MockCollection) UpdateOne(
 ) (domain.MongoUpdate, error) {
 	result, err := c.UpdateOneFn(ctx, filter, i)
 	if err != nil {
-		return domain.MongoUpdate{}, nil
+		return domain.MongoUpdate{}, err
+	}
+	return result, nil
+}
+
+// DeleteOne ..
+func (c MockCollection) DeleteOne(
+	ctx context.Context,
+	filter bson.M,
+) (domain.MongoDelete, error) {
+	result, err := c.DeleteOneFn(ctx, filter)
+	if err != nil {
+		return domain.MongoDelete{}, err
 	}
 	return result, nil
 }

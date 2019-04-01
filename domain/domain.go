@@ -56,6 +56,7 @@ type (
 		Find(ctx context.Context, i interface{}) (Cursor, error)
 		InsertOne(ctx context.Context, i interface{}) (MongoInsert, error)
 		UpdateOne(ctx context.Context, filter bson.M, i interface{}) (MongoUpdate, error)
+		DeleteOne(ctx context.Context, filter bson.M) (MongoDelete, error)
 	}
 
 	// Cursor ..
@@ -95,6 +96,11 @@ type (
 	// MongoUpdate ..
 	MongoUpdate struct {
 		MatchedCount int
+	}
+
+	// MongoDelete ..
+	MongoDelete struct {
+		DeletedCount int
 	}
 )
 
@@ -148,6 +154,18 @@ func (c MongoCollection) UpdateOne(
 		return MongoUpdate{}, err
 	}
 	return MongoUpdate{MatchedCount: int(result.MatchedCount)}, nil
+}
+
+// DeleteOne ..
+func (c MongoCollection) DeleteOne(
+	ctx context.Context,
+	filter bson.M,
+) (MongoDelete, error) {
+	result, err := c.Collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return MongoDelete{}, err
+	}
+	return MongoDelete{DeletedCount: int(result.DeletedCount)}, nil
 }
 
 // Next ..

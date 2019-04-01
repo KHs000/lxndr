@@ -90,8 +90,13 @@ func editUser(client domain.Client, body map[string]interface{}) (int, interface
 	}
 
 	coll := domain.Collection{Database: "lxndr", CollName: "user"}
-	res := mongodb.Update(
+	res, err := mongodb.Update(
 		client, coll, bson.M{"email": email}, bson.M{"$set": body})
+	if err != nil {
+		resp.Message = "Internal server error."
+		log.Println("Internal server error.", err)
+		return http.StatusInternalServerError, resp
+	}
 
 	if res.MatchedCount != 1 {
 		resp.Message = "This email matched no registry."
@@ -105,44 +110,50 @@ func editUser(client domain.Client, body map[string]interface{}) (int, interface
 	return http.StatusOK, resp
 }
 
-func deleteUser(w http.ResponseWriter, r *http.Request) {
+func deleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	logAccess(r)
 	defer recovery("Method not allowed.")
 	validateMethod(w, r, "POST")
-	resp := domain.Response{}
 
-	type request struct {
-		email string
-	}
 	b, e := processRequestBody(r, request{})
 	if e != nil {
 		writeResponse(w, e.Code, e.Error)
 		return
 	}
 
-	email := b["email"].(string)
-	isNew := identifier.ValidateNewUser(mongodb.Client, email)
+	code, resp := deleteUser(mongodb.Client, b)
+	writeResponse(w, code, resp)
+}
+
+func deleteUser(client domain.Client, body map[string]interface{}) (int, interface{}) {
+	resp := domain.Response{}
+
+	email := body["email"].(string)
+	isNew := identifier.ValidateNewUser(client, email)
 	if isNew {
 		resp.Message = "This email is not registred."
 		log.Println("Email not registred.")
-		writeResponse(w, http.StatusNotFound, resp)
-		return
+		return http.StatusNotFound, resp
 	}
 
 	coll := domain.Collection{Database: "lxndr", CollName: "user"}
-	res := mongodb.Delete(mongodb.Conn, coll, bson.M{"email": email})
+	res, err := mongodb.Delete(client, coll, bson.M{"email": email})
+	if err != nil {
+		resp.Message = "Internal server error."
+		log.Println("Internal server error.", err)
+		return http.StatusInternalServerError, resp
+	}
 
 	if res.DeletedCount != 1 {
 		resp.Message = "This email matched no registry."
 		log.Println("This email matched no registry.")
-		writeResponse(w, http.StatusNotFound, resp)
-		return
+		return http.StatusNotFound, resp
 	}
 
 	message := fmt.Sprintf(`User '%v' deleted.`, email)
 	resp.Message = message
 	log.Println(message)
-	writeResponse(w, http.StatusOK, resp)
+	return http.StatusOK, resp
 }
 
 func listUsers(w http.ResponseWriter, r *http.Request) {
@@ -171,38 +182,4 @@ func listUsers(w http.ResponseWriter, r *http.Request) {
 	resp.Data = list
 	log.Printf("Found %v users", len(list))
 	writeResponse(w, http.StatusOK, resp)
-}
-
-func testHandler(w http.ResponseWriter, r *http.Request) {
-	logAccess(r)
-	defer recovery("Method not allowed.")
-	validateMethod(w, r, "GET")
-
-	client := domain.MongoClient{Client: mongodb.Conn.Client, Context: mongodb.Conn.Ctx}
-	resp := test(client)
-
-	log.Printf("Found %v users", len(resp.Data))
-	writeResponse(w, http.StatusOK, resp)
-}
-
-func test(client domain.Client) domain.Response {
-	resp := domain.Response{}
-
-	coll := domain.Collection{Database: "lxndr", CollName: "user"}
-	res := mongodb.Test(client, coll, bson.M{})
-
-	var list []string
-	for res.Next(client.Ctx()) {
-		row, err := res.DecodeCursor()
-		if err != nil {
-			resp.Message = "Internal server error."
-			log.Println("Error decoding line from search.")
-			return resp
-		}
-		list = append(list, row["email"].(string))
-	}
-
-	resp.Message = ""
-	resp.Data = list
-	return resp
 }

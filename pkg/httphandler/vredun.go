@@ -96,7 +96,6 @@ func ExportRoutes() {
 	http.HandleFunc("/", defaultRoute)
 	http.HandleFunc("/createUser", createUserHandler)
 	http.HandleFunc("/editUser", editUserHandler)
-	http.HandleFunc("/deleteUser", deleteUser)
+	http.HandleFunc("/deleteUser", deleteUserHandler)
 	http.HandleFunc("/listUsers", listUsers)
-	http.HandleFunc("/test", testHandler)
 }
